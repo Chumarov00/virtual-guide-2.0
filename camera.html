@@ -375,9 +375,9 @@
     const TARGETS_PATH = "./targets.mind";
 
     const VIDEO_URLS = {
-      bulygin: "./assets/videos/bulygin.mp4",
-      naumov: "./assets/videos/naumov.mp4",
-      pchelin: "./assets/videos/pchelin.mp4"
+      bulygin: new URL("./assets/videos/bulygin.mp4", window.location.href).href,
+      naumov: new URL("./assets/videos/naumov.mp4", window.location.href).href,
+      pchelin: new URL("./assets/videos/pchelin.mp4", window.location.href).href
     };
 
     function groupByIndex(i) {
@@ -449,15 +449,22 @@
       videoEl.setAttribute("preload", "auto");
       videoEl.disablePictureInPicture = true;
       videoEl.setAttribute("disablePictureInPicture", "");
-      videoEl.crossOrigin = "anonymous";
     }
 
     hardenInlineVideo();
 
+    videoEl.addEventListener("loadeddata", () => {
+      console.log("VIDEO LOADED:", videoEl.currentSrc);
+    });
+
+    videoEl.addEventListener("canplay", () => {
+      console.log("VIDEO CANPLAY:", videoEl.currentSrc);
+    });
+
     videoEl.addEventListener("error", () => {
       console.error("VIDEO ERROR:", videoEl.currentSrc, videoEl.error);
       setStatus("Ошибка загрузки видео");
-      videoHintEl.textContent = "Браузер не смог открыть видео";
+      videoHintEl.textContent = "Видео не открылось — нажми Пауза/Играть";
     });
 
     playPauseBtn.addEventListener("click", async () => {
@@ -478,19 +485,13 @@
       }
     });
 
-    async function checkFileExists(src) {
-      try {
-        const response = await fetch(src, { method: "GET", cache: "no-store" });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return true;
-      } catch (error) {
-        console.error("FILE NOT FOUND:", src, error);
-        return false;
-      }
-    }
-
     function waitForCanPlay(video) {
       return new Promise((resolve, reject) => {
+        if (video.readyState >= 3) {
+          resolve();
+          return;
+        }
+
         const onCanPlay = () => {
           cleanup();
           resolve();
@@ -528,14 +529,6 @@
       isStartingVideo = true;
 
       try {
-        const exists = await checkFileExists(src);
-        if (!exists) {
-          setStatus(`Видео не найдено`);
-          videoHintEl.textContent = "Файл видео не найден";
-          playPauseBtn.textContent = "▶ Играть";
-          return;
-        }
-
         if (currentSrc !== src) {
           videoEl.pause();
           videoEl.removeAttribute("src");
@@ -547,9 +540,12 @@
           videoEl.muted = true;
           videoEl.defaultMuted = true;
           videoEl.loop = true;
+          videoEl.playsInline = true;
 
           videoEl.load();
           await waitForCanPlay(videoEl);
+        } else if (videoEl.paused) {
+          videoEl.currentTime = 0;
         }
 
         await videoEl.play();
@@ -560,8 +556,8 @@
       } catch (error) {
         console.error("START VIDEO ERROR:", error, src);
         playPauseBtn.textContent = "▶ Играть";
-        videoHintEl.textContent = "Автозапуск не сработал — нажми Play";
-        setStatus(`Не удалось запустить видео`);
+        videoHintEl.textContent = "Автозапуск не сработал — нажми Играть";
+        setStatus("Не удалось запустить видео");
       } finally {
         isStartingVideo = false;
       }
@@ -642,7 +638,7 @@
         updateRotateHint();
       } catch (error) {
         console.error("START AR ERROR:", error);
-        setStatus(`Не удалось запустить камеру`);
+        setStatus("Не удалось запустить камеру");
         alert("Не удалось запустить камеру. Проверь разрешение браузера и что камера не занята.");
       }
     }
