@@ -1,16 +1,293 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="utf-8">
-  <title>AR-гид — камера</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>AR — Призраки прошлого</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"/>
+
+  <!-- A-Frame + MindAR -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-  <link rel="stylesheet" href="camera.css">
+
+  <style>
+    html, body {
+      margin:0;
+      padding:0;
+      width:100%;
+      height:100%;
+      overflow:hidden;
+      background:#000;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
+
+    #ar {
+      position:fixed;
+      inset:0;
+    }
+
+    .topBar{
+      position:fixed;
+      left:12px;
+      right:12px;
+      top:12px;
+      z-index:10050;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      pointer-events:auto;
+    }
+
+    .pillBtn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.45);
+      backdrop-filter:blur(10px);
+      color:rgba(255,255,255,.92);
+      text-decoration:none;
+      font-weight:900;
+      font-size:13px;
+      user-select:none;
+    }
+
+    .status{
+      flex:1;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.45);
+      backdrop-filter:blur(10px);
+      color:rgba(255,255,255,.92);
+      text-align:center;
+      font-weight:850;
+      font-size:12px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    #rotateHint{
+      position:fixed;
+      inset:0;
+      z-index:10020;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background:rgba(0,0,0,.55);
+      pointer-events:none;
+    }
+
+    .rotateCard{
+      width:min(520px, 92vw);
+      border-radius:18px;
+      padding:16px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(16,18,24,.75);
+      backdrop-filter:blur(12px);
+      color:#fff;
+      text-align:center;
+    }
+
+    .rotateIcon{
+      width:64px;
+      height:64px;
+      margin:0 auto 10px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.14);
+      background:
+        radial-gradient(120px 60px at 30% 30%, rgba(74,168,255,.35), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:30px;
+    }
+
+    .rotateTitle{
+      font-weight:950;
+      font-size:15px;
+      margin:0 0 6px;
+    }
+
+    .rotateText{
+      opacity:.85;
+      font-size:13px;
+      line-height:1.35;
+    }
+
+    #startOverlay{
+      position:fixed;
+      inset:0;
+      z-index:9998;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(11,12,15,0.85);
+    }
+
+    .panel{
+      width:min(720px, 92vw);
+      border-radius:16px;
+      padding:18px;
+      background:#17191f;
+      box-shadow:0 10px 30px rgba(0,0,0,0.55);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+    }
+
+    .panel h3{
+      margin:0 0 8px;
+      font-size:18px;
+    }
+
+    .panel p{
+      margin:0 0 14px;
+      opacity:.85;
+      font-size:13px;
+      line-height:1.35;
+    }
+
+    .actions{
+      display:flex;
+      gap:12px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+    }
+
+    button{
+      border:0;
+      padding:11px 14px;
+      border-radius:12px;
+      font-weight:800;
+      cursor:pointer;
+      font-family:inherit;
+    }
+
+    .ghost{
+      background:#31394a;
+      color:#fff;
+    }
+
+    .primary{
+      background:#4aa8ff;
+      color:#001525;
+    }
+
+    /* ВАЖНО: контейнер видео прозрачный */
+    #videoDock{
+      position:fixed;
+      inset:0;
+      z-index:10030;
+      background:transparent;
+      display:none;
+    }
+
+    #arVideo{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      display:block;
+      background:transparent;
+      object-fit:cover;
+      opacity:1;
+    }
+
+    video::-webkit-media-controls { display:none !important; }
+    video::-webkit-media-controls-panel { display:none !important; }
+
+    #videoControls{
+      position:absolute;
+      left:12px;
+      bottom:12px;
+      z-index:10040;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      pointer-events:auto;
+    }
+
+    .vbtn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.45);
+      backdrop-filter:blur(10px);
+      color:rgba(255,255,255,.92);
+      font-weight:900;
+      font-size:13px;
+      user-select:none;
+      cursor:pointer;
+    }
+
+    .vhint{
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.35);
+      backdrop-filter:blur(10px);
+      color:rgba(180,220,255,.95);
+      font-weight:850;
+      font-size:12px;
+      max-width:min(62vw, 520px);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    #opacityControl{
+      position:absolute;
+      right:12px;
+      top:50%;
+      transform:translateY(-50%);
+      z-index:10045;
+      display:none;
+      padding:12px 10px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.45);
+      backdrop-filter:blur(10px);
+      color:rgba(255,255,255,.92);
+      user-select:none;
+      pointer-events:auto;
+    }
+
+    #opacityLabel{
+      font-size:12px;
+      font-weight:900;
+      text-align:center;
+      margin-bottom:10px;
+      opacity:.9;
+    }
+
+    #opacitySlider{
+      width:240px;
+      height:28px;
+      transform:rotate(-90deg);
+      transform-origin:center;
+      cursor:pointer;
+    }
+
+    #opacityMinMax{
+      margin-top:10px;
+      display:flex;
+      justify-content:space-between;
+      font-size:11px;
+      opacity:.75;
+    }
+  </style>
 </head>
+
 <body>
+
   <div class="topBar">
-    <a class="pillBtn" href="index.html">← Назад</a>
+    <a class="pillBtn" href="./index.html">← Назад</a>
     <div class="status" id="status">Нажмите «Запустить AR»</div>
   </div>
 
@@ -18,54 +295,266 @@
     <div class="rotateCard">
       <div class="rotateIcon">📱↻</div>
       <div class="rotateTitle">Поверни телефон горизонтально</div>
-      <div class="rotateText">Так метка распознаётся стабильнее, а призрак поверх здания выглядит лучше.</div>
+      <div class="rotateText">Так метка распознаётся стабильнее, а “призрак” выглядит лучше.</div>
     </div>
   </div>
 
-  <div class="startOverlay" id="startOverlay">
+  <div id="startOverlay">
     <div class="panel">
-      <h1 class="panel__title">Призраки прошлого</h1>
-      <p class="panel__text" id="startDescription">
-        Нажмите кнопку, разрешите доступ к камере и наведите телефон на метку.
+      <h3>Призраки прошлого</h3>
+      <p>
+        Нажмите кнопку, разрешите доступ к камере и наведите на фото или здание.
+        <br><span style="opacity:.75">Потом уменьшайте прозрачность видео — и увидите “призрак” поверх реальности.</span>
       </p>
-      <div class="panel__actions">
-        <button class="btn ghost" id="reloadBtn" type="button">Обновить</button>
-        <button class="btn primary" id="startBtn" type="button">Запустить AR</button>
+      <div class="actions">
+        <button class="ghost" id="reloadBtn" type="button">Обновить</button>
+        <button class="primary" id="startBtn" type="button">Запустить AR</button>
       </div>
-      <p class="panel__note">Если экран чёрный, камера может быть занята другой вкладкой или приложением.</p>
+      <p style="margin-top:10px; font-size:12px; opacity:.65">
+        Если чёрный экран — камера занята другой вкладкой или приложением.
+      </p>
     </div>
   </div>
 
-  <div class="videoDock" id="videoDock" hidden>
-    <video id="arVideo" playsinline webkit-playsinline muted preload="auto"></video>
+  <div id="videoDock">
+    <video id="arVideo" playsinline webkit-playsinline muted></video>
 
-    <div class="videoControls">
+    <div id="videoControls">
       <button class="vbtn" id="playPauseBtn" type="button">⏸ Пауза</button>
       <div class="vhint" id="videoHint">Сканирование…</div>
     </div>
 
-    <div class="opacityControl" id="opacityControl">
-      <div class="opacityLabel">Прозрачность</div>
-      <input id="opacitySlider" type="range" min="20" max="100" value="100" step="1">
-      <div class="opacityScale"><span>20%</span><span>100%</span></div>
+    <div id="opacityControl" aria-label="Регулировка прозрачности видео">
+      <div id="opacityLabel">Прозрачность</div>
+      <input id="opacitySlider" type="range" min="20" max="100" value="100" step="1" />
+      <div id="opacityMinMax">
+        <span>20%</span>
+        <span>100%</span>
+      </div>
     </div>
   </div>
 
-  <a-scene
-    id="scene"
-    mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiScanning: false; uiError: false;"
-    renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true"
-    vr-mode-ui="enabled: false"
-    device-orientation-permission-ui="enabled: true"
-    embedded>
+  <div id="ar">
+    <a-scene
+      id="scene"
+      mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiScanning: false; uiError: false;"
+      renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true"
+      vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enabled: true"
+      embedded>
 
-    <a-entity light="type: hemisphere; intensity: 0.9"></a-entity>
-    <a-entity light="type: directional; intensity: 0.9" position="1 2 1"></a-entity>
-    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-    <a-entity id="targetsRoot"></a-entity>
-  </a-scene>
+      <a-entity light="type: hemisphere; intensity: 0.9"></a-entity>
+      <a-entity light="type: directional; intensity: 0.9" position="1 2 1"></a-entity>
 
-  <script src="places.js"></script>
-  <script src="camera.js"></script>
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+      <a-entity id="targetsRoot"></a-entity>
+    </a-scene>
+  </div>
+
+  <script>
+    const TARGETS_PATH = "./targets.mind";
+
+    const VIDEO_URLS = {
+      bulygin: "./assets/videos/bulygin.mp4",
+      naumov: "./assets/videos/naumov.mp4",
+      pchelin: "./assets/videos/pchelin.mp4"
+    };
+
+    function groupByIndex(i){
+      if (i >= 0 && i <= 7) return "bulygin";
+      if (i >= 8 && i <= 14) return "naumov";
+      if (i >= 15 && i <= 24) return "pchelin";
+      return null;
+    }
+
+    const statusEl = document.getElementById("status");
+    const startOverlay = document.getElementById("startOverlay");
+    const startBtn = document.getElementById("startBtn");
+    const reloadBtn = document.getElementById("reloadBtn");
+
+    const rotateHint = document.getElementById("rotateHint");
+
+    const videoDock = document.getElementById("videoDock");
+    const videoEl = document.getElementById("arVideo");
+    const videoHintEl = document.getElementById("videoHint");
+
+    const playPauseBtn = document.getElementById("playPauseBtn");
+
+    const opacityControl = document.getElementById("opacityControl");
+    const opacitySlider = document.getElementById("opacitySlider");
+
+    const sceneEl = document.getElementById("scene");
+    const targetsRoot = document.getElementById("targetsRoot");
+
+    function setStatus(t){
+      statusEl.textContent = t;
+    }
+
+    let arStartedOnce = false;
+
+    function isMobileLike(){
+      return window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+    }
+
+    function isPortrait(){
+      if (window.matchMedia) return window.matchMedia("(orientation: portrait)").matches;
+      return window.innerHeight > window.innerWidth;
+    }
+
+    function updateRotateHint(){
+      if (!arStartedOnce){
+        rotateHint.style.display = "none";
+        return;
+      }
+      rotateHint.style.display = (isMobileLike() && isPortrait()) ? "flex" : "none";
+    }
+
+    window.addEventListener("resize", updateRotateHint);
+    window.addEventListener("orientationchange", updateRotateHint);
+
+    opacitySlider.addEventListener("input", () => {
+      const alpha = Number(opacitySlider.value) / 100;
+      videoEl.style.opacity = String(alpha);
+    });
+
+    function hardenInlineVideo(){
+      videoEl.muted = true;
+      videoEl.loop = true;
+      videoEl.playsInline = true;
+      videoEl.setAttribute("playsinline", "");
+      videoEl.setAttribute("webkit-playsinline", "");
+      videoEl.disablePictureInPicture = true;
+      videoEl.setAttribute("disablePictureInPicture", "");
+      videoEl.preload = "auto";
+    }
+
+    hardenInlineVideo();
+
+    playPauseBtn.addEventListener("click", async () => {
+      try{
+        if (videoEl.paused){
+          await videoEl.play();
+          playPauseBtn.textContent = "⏸ Пауза";
+          videoHintEl.textContent = "Видео играет — уменьшай прозрачность";
+        } else {
+          videoEl.pause();
+          playPauseBtn.textContent = "▶ Играть";
+          videoHintEl.textContent = "Пауза";
+        }
+      }catch(e){
+        playPauseBtn.textContent = "▶ Играть";
+        videoHintEl.textContent = "Нажми ещё раз";
+        console.error(e);
+      }
+    });
+
+    function buildTargets(){
+      targetsRoot.innerHTML = "";
+      for(let i = 0; i <= 24; i++){
+        const holder = document.createElement("a-entity");
+        holder.setAttribute("mindar-image-target", `targetIndex: ${i}`);
+        holder.addEventListener("targetFound", () => onFound(i));
+        holder.addEventListener("targetLost", () => onLost(i));
+        targetsRoot.appendChild(holder);
+      }
+    }
+
+    let currentIndex = null;
+    let currentSrc = "";
+
+    async function onFound(idx){
+      const group = groupByIndex(idx);
+      if(!group){
+        setStatus(`Найдена метка #${idx + 1}, но для неё нет видео`);
+        return;
+      }
+
+      const src = VIDEO_URLS[group];
+      currentIndex = idx;
+
+      videoDock.style.display = "block";
+      opacityControl.style.display = "block";
+      opacitySlider.value = "100";
+      videoEl.style.opacity = "1";
+
+      setStatus(`Метка #${idx + 1} найдена`);
+      videoHintEl.textContent = `Метка #${idx + 1} найдена — уменьши прозрачность справа`;
+
+      if (currentSrc === src && !videoEl.paused){
+        return;
+      }
+
+      currentSrc = src;
+      videoEl.src = src;
+
+      try{
+        await videoEl.play();
+        playPauseBtn.textContent = "⏸ Пауза";
+      }catch(e){
+        playPauseBtn.textContent = "▶ Играть";
+        videoHintEl.textContent = "Нажми Play";
+        console.error(e);
+      }
+    }
+
+    function onLost(idx){
+      if (idx === currentIndex){
+        setStatus(`Метка #${idx + 1} потеряна — видео продолжается`);
+        videoHintEl.textContent = "Метка потеряна — видео продолжается";
+      }
+    }
+
+    async function checkTargetsFile(){
+      sceneEl.setAttribute(
+        "mindar-image",
+        `imageTargetSrc: ${TARGETS_PATH}; autoStart: false; uiScanning: false; uiError: false;`
+      );
+
+      try{
+        const r = await fetch(TARGETS_PATH, { cache: "no-store" });
+        if(!r.ok) throw new Error(`targets.mind не найден: HTTP ${r.status}`);
+        return true;
+      }catch(e){
+        setStatus("targets.mind не загрузился");
+        alert("targets.mind не загрузился. Проверь, что файл лежит рядом с camera.html.");
+        console.error(e);
+        return false;
+      }
+    }
+
+    async function startAR(){
+      const ok = await checkTargetsFile();
+      if(!ok) return;
+
+      buildTargets();
+
+      const mindar = sceneEl.systems["mindar-image-system"];
+      if(!mindar){
+        setStatus("MindAR system не найден");
+        alert("MindAR system не найден.");
+        return;
+      }
+
+      try{
+        setStatus("Запуск камеры…");
+        await mindar.start();
+        setStatus("Камера запущена — наведи на метку");
+        startOverlay.style.display = "none";
+
+        arStartedOnce = true;
+        updateRotateHint();
+      }catch(e){
+        setStatus(`Не удалось запустить камеру: ${e?.name || "ошибка"}`);
+        alert("Не удалось запустить камеру/AR. Проверь разрешение и что камера не занята.");
+        console.error(e);
+      }
+    }
+
+    reloadBtn.addEventListener("click", () => location.reload());
+    startBtn.addEventListener("click", startAR);
+
+    setStatus("Нажмите «Запустить AR»");
+  </script>
 </body>
 </html>
