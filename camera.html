@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>AR-гид — камера</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  <link rel="stylesheet" href="camera.css">
+</head>
+<body>
+  <div class="topBar">
+    <a class="pillBtn" href="index.html">← Назад</a>
+    <div class="status" id="status">Нажмите «Запустить AR»</div>
+  </div>
+
+  <div id="rotateHint" aria-hidden="true">
+    <div class="rotateCard">
+      <div class="rotateIcon">📱↻</div>
+      <div class="rotateTitle">Поверни телефон горизонтально</div>
+      <div class="rotateText">Так метка распознаётся стабильнее, а призрак поверх здания выглядит лучше.</div>
+    </div>
+  </div>
+
+  <div class="startOverlay" id="startOverlay">
+    <div class="panel">
+      <h1 class="panel__title">Призраки прошлого</h1>
+      <p class="panel__text" id="startDescription">
+        Нажмите кнопку, разрешите доступ к камере и наведите телефон на метку.
+      </p>
+      <div class="panel__actions">
+        <button class="btn ghost" id="reloadBtn" type="button">Обновить</button>
+        <button class="btn primary" id="startBtn" type="button">Запустить AR</button>
+      </div>
+      <p class="panel__note">Если экран чёрный, камера может быть занята другой вкладкой или приложением.</p>
+    </div>
+  </div>
+
+  <div class="videoDock" id="videoDock" hidden>
+    <video id="arVideo" playsinline webkit-playsinline muted preload="auto"></video>
+
+    <div class="videoControls">
+      <button class="vbtn" id="playPauseBtn" type="button">⏸ Пауза</button>
+      <div class="vhint" id="videoHint">Сканирование…</div>
+    </div>
+
+    <div class="opacityControl" id="opacityControl">
+      <div class="opacityLabel">Прозрачность</div>
+      <input id="opacitySlider" type="range" min="20" max="100" value="100" step="1">
+      <div class="opacityScale"><span>20%</span><span>100%</span></div>
+    </div>
+  </div>
+
+  <a-scene
+    id="scene"
+    mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiScanning: false; uiError: false;"
+    renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: true"
+    embedded>
+
+    <a-entity light="type: hemisphere; intensity: 0.9"></a-entity>
+    <a-entity light="type: directional; intensity: 0.9" position="1 2 1"></a-entity>
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    <a-entity id="targetsRoot"></a-entity>
+  </a-scene>
+
+  <script src="places.js"></script>
+  <script src="camera.js"></script>
+</body>
+</html>

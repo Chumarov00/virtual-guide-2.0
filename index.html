@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AR-гид по Йошкар-Оле</title>
+  <meta name="description" content="AR-гид по историческим местам Йошкар-Олы с видео поверх реального изображения.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar__inner">
+      <a class="brand" href="index.html" aria-label="На главную">
+        <span class="brand__logo" aria-hidden="true"></span>
+        <span class="brand__text">AR-гид</span>
+        <span class="brand__badge">Beta</span>
+      </a>
+
+      <nav class="nav" aria-label="Основная навигация">
+        <a class="nav__link" href="#places">Места</a>
+        <a class="nav__link" href="#how">Как пользоваться</a>
+        <a class="nav__link" href="#support">Поддержка</a>
+      </nav>
+
+      <div class="actions">
+        <a class="btn btn--ghost" href="#how">Инструкция</a>
+        <a class="btn btn--primary" href="camera.html">Запустить камеру</a>
+        <button class="iconbtn" type="button" aria-label="Справка" id="helpBtn">?</button>
+      </div>
+
+      <button class="burger" type="button" aria-label="Открыть меню" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+
+    <div class="drawer" hidden>
+      <a class="drawer__link" href="#places">Места</a>
+      <a class="drawer__link" href="#how">Как пользоваться</a>
+      <a class="drawer__link" href="#support">Поддержка</a>
+      <div class="drawer__actions">
+        <a class="btn btn--ghost" href="#how">Инструкция</a>
+        <a class="btn btn--primary" href="camera.html">Запустить камеру</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="panel hero">
+      <p class="eyebrow">Призраки прошлого</p>
+      <h1 class="hero__title">AR-прогулка по историческим местам Йошкар-Олы</h1>
+      <p class="hero__text">
+        Выберите объект, откройте камеру и наведите телефон на метку. Поверх реального изображения запустится видео, а справа можно будет менять прозрачность.
+      </p>
+      <div class="hero__actions">
+        <a class="btn btn--primary" href="camera.html">Запустить общий режим</a>
+        <a class="btn btn--ghost" href="#places">Выбрать объект</a>
+      </div>
+    </section>
+
+    <section class="panel" id="how">
+      <div class="sectionHead">
+        <h2 class="section__title">Как пользоваться</h2>
+        <p class="section__text">Эта инструкция уже подходит для GitHub Pages. Ничего дополнительно собирать не нужно.</p>
+      </div>
+      <ol class="steps">
+        <li class="step"><span class="step__num">1</span><div><strong>Открой страницу проекта.</strong><br>Нажми кнопку запуска камеры на главной странице или у нужной карточки.</div></li>
+        <li class="step"><span class="step__num">2</span><div><strong>Разреши доступ к камере.</strong><br>Без этого MindAR не сможет распознать метку.</div></li>
+        <li class="step"><span class="step__num">3</span><div><strong>Наведись на метку.</strong><br>Держи телефон устойчиво 1–2 секунды, чтобы видео успело стартовать.</div></li>
+        <li class="step"><span class="step__num">4</span><div><strong>Уменьшай прозрачность видео.</strong><br>Так получится эффект призрака поверх настоящего здания или фотографии.</div></li>
+      </ol>
+    </section>
+
+    <section class="panel" id="places">
+      <div class="sectionHead">
+        <h2 class="section__title">Исторические места</h2>
+        <p class="section__text">Карточки и кнопки строятся из одного конфигурационного файла, чтобы дальше было легко добавлять новые объекты.</p>
+      </div>
+      <div class="placeGrid" id="placeGrid"></div>
+    </section>
+
+    <section class="panel" id="support">
+      <div class="sectionHead">
+        <h2 class="section__title">Поддержка</h2>
+        <p class="section__text">Если объект плохо распознаётся, добавь света, убери блики и держи метку в кадре чуть дольше.</p>
+      </div>
+      <div class="supportBox">
+        <div>
+          <strong>Что уже исправлено в этой версии:</strong>
+          <ul class="supportList">
+            <li>убраны битые ссылки и неправильные пути к фото;</li>
+            <li>AR-логика вынесена из HTML в отдельные файлы;</li>
+            <li>добавлена нормальная структура папок для GitHub;</li>
+            <li>кнопки карточек теперь открывают правильное место;</li>
+            <li>неактивные объекты помечены как «Скоро».</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="places.js"></script>
+  <script src="header.js"></script>
+  <script src="index.js"></script>
+</body>
+</html>
