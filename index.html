@@ -73,9 +73,14 @@
     <section class="panel" id="places">
       <div class="sectionHead">
         <h2 class="section__title">Исторические места</h2>
-        <p class="section__text">Карточки и кнопки строятся из одного конфигурационного файла, чтобы дальше было легко добавлять новые объекты.</p>
+        <p class="section__text">На телефоне листай карточки свайпом. На компьютере используй стрелки или перетаскивай ленту мышкой.</p>
       </div>
-      <div class="placeGrid" id="placeGrid"></div>
+
+      <div class="placeCarousel">
+        <button class="carouselBtn carouselBtn--prev" id="placesPrev" type="button" aria-label="Предыдущие карточки" hidden>&#8249;</button>
+        <div class="placeGrid" id="placeGrid"></div>
+        <button class="carouselBtn carouselBtn--next" id="placesNext" type="button" aria-label="Следующие карточки" hidden>&#8250;</button>
+      </div>
     </section>
 
     <section class="panel" id="support">
@@ -88,10 +93,10 @@
           <strong>Что уже исправлено в этой версии:</strong>
           <ul class="supportList">
             <li>убраны битые ссылки и неправильные пути к фото;</li>
-            <li>AR-логика вынесена из HTML в отдельные файлы;</li>
+            <li>AR-логика вынесена из отдельной путаницы в стабильную схему;</li>
             <li>добавлена нормальная структура папок для GitHub;</li>
-            <li>кнопки карточек теперь открывают правильное место;</li>
-            <li>неактивные объекты помечены как «Скоро».</li>
+            <li>кнопки карточек открывают правильное место;</li>
+            <li>карточки снова листаются как лента.</li>
           </ul>
         </div>
       </div>
