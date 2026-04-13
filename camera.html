@@ -2,768 +2,164 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8">
-  <title>AR — Призраки прошлого</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-
-  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-
+  <title>AR — выбор раздела</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #000;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    :root{
+      --bg:#0b1020;
+      --text:#e7ecff;
+      --muted:#a9b3d6;
+      --stroke:rgba(255,255,255,.10);
+      --accent:#7c5cff;
+      --accent2:#32d1ff;
     }
-
-    #ar {
-      position: fixed;
-      inset: 0;
-    }
-
-    a-scene {
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-    }
-
-    .topBar {
-      position: fixed;
-      left: 12px;
-      right: 12px;
-      top: 12px;
-      z-index: 10050;
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      pointer-events: auto;
-    }
-
-    .pillBtn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 10px 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.45);
-      backdrop-filter: blur(10px);
-      color: rgba(255,255,255,.92);
-      text-decoration: none;
-      font-weight: 900;
-      font-size: 13px;
-      user-select: none;
-    }
-
-    .status {
-      flex: 1;
-      padding: 10px 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.45);
-      backdrop-filter: blur(10px);
-      color: rgba(255,255,255,.92);
-      text-align: center;
-      font-weight: 850;
-      font-size: 12px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    #rotateHint {
-      position: fixed;
-      inset: 0;
-      z-index: 10020;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0,0,0,.55);
-      pointer-events: none;
-    }
-
-    .rotateCard {
-      width: min(520px, 92vw);
-      border-radius: 18px;
-      padding: 16px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(16,18,24,.75);
-      backdrop-filter: blur(12px);
-      color: #fff;
-      text-align: center;
-    }
-
-    .rotateIcon {
-      width: 64px;
-      height: 64px;
-      margin: 0 auto 10px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.14);
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
       background:
-        radial-gradient(120px 60px at 30% 30%, rgba(74,168,255,.35), transparent 60%),
-        linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 30px;
+        radial-gradient(900px 500px at 10% 10%, rgba(124,92,255,.35), transparent 60%),
+        radial-gradient(800px 500px at 90% 20%, rgba(50,209,255,.24), transparent 55%),
+        var(--bg);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
     }
-
-    .rotateTitle {
-      font-weight: 950;
-      font-size: 15px;
-      margin: 0 0 6px;
+    .panel{
+      width:min(760px, 100%);
+      padding:24px;
+      border-radius:24px;
+      border:1px solid var(--stroke);
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      box-shadow:0 20px 50px rgba(0,0,0,.35);
     }
-
-    .rotateText {
-      opacity: .85;
-      font-size: 13px;
-      line-height: 1.35;
+    .eyebrow{
+      display:inline-flex;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      color:var(--muted);
+      font-size:12px;
+      font-weight:800;
+      margin-bottom:10px;
     }
-
-    #startOverlay {
-      position: fixed;
-      inset: 0;
-      z-index: 9998;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(11,12,15,0.85);
+    h1{
+      margin:0 0 10px;
+      font-size:34px;
+      line-height:1.1;
     }
-
-    .panel {
-      width: min(760px, 92vw);
-      border-radius: 16px;
-      padding: 18px;
-      background: #17191f;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.55);
-      border: 1px solid rgba(255,255,255,.10);
-      color: #fff;
+    p{
+      margin:0 0 18px;
+      color:var(--muted);
+      line-height:1.6;
     }
-
-    .panel h3 {
-      margin: 0 0 8px;
-      font-size: 18px;
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+      gap:14px;
+      margin-top:16px;
     }
-
-    .panel p {
-      margin: 0 0 14px;
-      opacity: .85;
-      font-size: 13px;
-      line-height: 1.4;
+    .card{
+      display:block;
+      padding:18px;
+      border-radius:20px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(17,26,51,.45);
+      color:var(--text);
+      text-decoration:none;
     }
-
-    .groupChooser {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      margin: 0 0 14px;
+    .card:hover{
+      transform:translateY(-1px);
+      filter:brightness(1.05);
     }
-
-    .groupBtn {
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.05);
-      color: #fff;
-      min-height: 54px;
-      padding: 12px;
-      border-radius: 14px;
-      font-weight: 900;
-      font-size: 15px;
-      cursor: pointer;
+    .card__title{
+      margin:0 0 8px;
+      font-size:20px;
+      font-weight:800;
     }
-
-    .groupBtn.isActive {
-      background: linear-gradient(135deg, rgba(108,99,255,.95), rgba(67,185,255,.95));
-      color: #07121d;
-      border-color: transparent;
+    .card__text{
+      margin:0;
+      font-size:15px;
+      color:var(--muted);
     }
-
-    .actions {
-      display: flex;
-      gap: 12px;
-      justify-content: flex-end;
-      flex-wrap: wrap;
+    .back{
+      display:inline-flex;
+      margin-top:18px;
+      color:var(--text);
+      text-decoration:none;
+      padding:10px 14px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.05);
     }
-
-    button {
-      border: 0;
-      padding: 11px 14px;
-      border-radius: 12px;
-      font-weight: 800;
-      cursor: pointer;
-      font-family: inherit;
-    }
-
-    button:disabled {
-      opacity: .55;
-      cursor: not-allowed;
-    }
-
-    .ghost {
-      background: #31394a;
-      color: #fff;
-    }
-
-    .primary {
-      background: #4aa8ff;
-      color: #001525;
-    }
-
-    #videoDock {
-      position: fixed;
-      inset: 0;
-      z-index: 10030;
-      background: transparent;
-      display: none;
-      pointer-events: none;
-    }
-
-    #arVideo {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      display: block;
-      background: transparent;
-      object-fit: cover;
-      opacity: 1;
-      pointer-events: none;
-    }
-
-    video::-webkit-media-controls { display: none !important; }
-    video::-webkit-media-controls-panel { display: none !important; }
-
-    #videoControls {
-      position: absolute;
-      left: 12px;
-      bottom: 12px;
-      z-index: 10040;
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      pointer-events: auto;
-    }
-
-    .vbtn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 10px 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.45);
-      backdrop-filter: blur(10px);
-      color: rgba(255,255,255,.92);
-      font-weight: 900;
-      font-size: 13px;
-      user-select: none;
-      cursor: pointer;
-    }
-
-    .vhint {
-      padding: 10px 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.35);
-      backdrop-filter: blur(10px);
-      color: rgba(180,220,255,.95);
-      font-weight: 850;
-      font-size: 12px;
-      max-width: min(62vw, 520px);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    #opacityControl {
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 10045;
-      display: none;
-      padding: 12px 10px;
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.45);
-      backdrop-filter: blur(10px);
-      color: rgba(255,255,255,.92);
-      user-select: none;
-      pointer-events: auto;
-    }
-
-    #opacityLabel {
-      font-size: 12px;
-      font-weight: 900;
-      text-align: center;
-      margin-bottom: 10px;
-      opacity: .9;
-    }
-
-    #opacitySlider {
-      width: 240px;
-      height: 28px;
-      transform: rotate(-90deg);
-      transform-origin: center;
-      cursor: pointer;
-    }
-
-    #opacityMinMax {
-      margin-top: 10px;
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      opacity: .75;
-    }
-
-    @media (max-width: 560px) {
-      .groupChooser {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 420px) {
-      #videoControls {
-        right: 12px;
-        flex-wrap: wrap;
-      }
-
-      .vhint {
-        max-width: 100%;
-      }
+    @media (max-width:700px){
+      h1{font-size:28px;}
+      .grid{grid-template-columns:1fr;}
     }
   </style>
 </head>
-
 <body>
+  <div class="panel">
+    <div class="eyebrow">Призраки прошлого</div>
+    <h1>Выбери раздел</h1>
+    <p id="infoText">Открой дома или памятники.</p>
 
-  <div class="topBar">
-    <a class="pillBtn" href="./index.html">← Назад</a>
-    <div class="status" id="status">Нажмите «Запустить AR»</div>
-  </div>
+    <div class="grid" id="chooser">
+      <a class="card" href="camera-homes.html">
+        <div class="card__title">Дома</div>
+        <div class="card__text">Дом Булыгина, дом Наумова, дом Пчелина.</div>
+      </a>
 
-  <div id="rotateHint" aria-hidden="true">
-    <div class="rotateCard">
-      <div class="rotateIcon">📱↻</div>
-      <div class="rotateTitle">Поверни телефон горизонтально</div>
-      <div class="rotateText">Так метка распознаётся стабильнее, а видео поверх здания выглядит лучше.</div>
-    </div>
-  </div>
-
-  <div id="startOverlay">
-    <div class="panel">
-      <h3>Призраки прошлого</h3>
-      <p id="startDescription">
-        Нажми кнопку, разреши доступ к камере и наведи телефон на метку.
-      </p>
-
-      <div class="groupChooser" id="groupChooser">
-        <button class="groupBtn" type="button" data-group="homes">Дома</button>
-        <button class="groupBtn" type="button" data-group="monuments">Памятники</button>
-      </div>
-
-      <div class="actions">
-        <button class="ghost" id="reloadBtn" type="button">Обновить</button>
-        <button class="primary" id="startBtn" type="button">Запустить AR</button>
-      </div>
-
-      <p style="margin-top:10px; font-size:12px; opacity:.65">
-        Если экран чёрный — камера может быть занята другой вкладкой или приложением.
-      </p>
-    </div>
-  </div>
-
-  <div id="videoDock">
-    <video id="arVideo" playsinline webkit-playsinline muted preload="auto"></video>
-
-    <div id="videoControls">
-      <button class="vbtn" id="playPauseBtn" type="button">⏸ Пауза</button>
-      <div class="vhint" id="videoHint">Сканирование…</div>
+      <a class="card" href="camera-monuments.html">
+        <div class="card__title">Памятники</div>
+        <div class="card__text">Пушкин и Евгений Онегин, Елизавета Петровна.</div>
+      </a>
     </div>
 
-    <div id="opacityControl" aria-label="Регулировка прозрачности видео">
-      <div id="opacityLabel">Прозрачность</div>
-      <input id="opacitySlider" type="range" min="20" max="100" value="100" step="1">
-      <div id="opacityMinMax">
-        <span>20%</span>
-        <span>100%</span>
-      </div>
-    </div>
-  </div>
-
-  <div id="ar">
-    <a-scene
-      id="scene"
-      mindar-image="imageTargetSrc: ./home.mind; autoStart: false; uiScanning: false; uiError: false;"
-      renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true; alpha: true"
-      vr-mode-ui="enabled: false"
-      device-orientation-permission-ui="enabled: true"
-      embedded>
-
-      <a-entity light="type: hemisphere; intensity: 0.9"></a-entity>
-      <a-entity light="type: directional; intensity: 0.9" position="1 2 1"></a-entity>
-
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-
-      <a-entity id="targetsRoot"></a-entity>
-    </a-scene>
+    <a class="back" href="index.html">← Назад на главную</a>
   </div>
 
   <script src="places.js"></script>
   <script>
-    const url = new URL(window.location.href);
-    const selectedSlug = url.searchParams.get("place") || "";
-    const requestedGroupSlug = url.searchParams.get("group") || "";
+    (function () {
+      const url = new URL(window.location.href);
+      const placeSlug = url.searchParams.get("place") || "";
+      const groupSlug = url.searchParams.get("group") || "";
+      const infoText = document.getElementById("infoText");
 
-    const selectedPlaceRaw = selectedSlug ? window.getPlaceBySlug(selectedSlug) : null;
-    const selectedPlace = selectedPlaceRaw && selectedPlaceRaw.enabled ? selectedPlaceRaw : null;
+      if (placeSlug) {
+        const place = window.getPlaceBySlug(placeSlug);
 
-    let activeGroupSlug = selectedPlace
-      ? selectedPlace.group
-      : (window.getGroupBySlug(requestedGroupSlug) ? requestedGroupSlug : "");
+        if (place && place.enabled) {
+          if (place.group === "homes") {
+            window.location.replace(`camera-homes.html?place=${encodeURIComponent(place.slug)}`);
+            return;
+          }
 
-    const statusEl = document.getElementById("status");
-    const startOverlay = document.getElementById("startOverlay");
-    const startDescription = document.getElementById("startDescription");
-    const startBtn = document.getElementById("startBtn");
-    const reloadBtn = document.getElementById("reloadBtn");
-    const rotateHint = document.getElementById("rotateHint");
-    const groupChooser = document.getElementById("groupChooser");
-    const groupButtons = Array.from(document.querySelectorAll(".groupBtn"));
-
-    const videoDock = document.getElementById("videoDock");
-    const videoEl = document.getElementById("arVideo");
-    const videoHintEl = document.getElementById("videoHint");
-    const playPauseBtn = document.getElementById("playPauseBtn");
-    const opacityControl = document.getElementById("opacityControl");
-    const opacitySlider = document.getElementById("opacitySlider");
-
-    const sceneEl = document.getElementById("scene");
-    const targetsRoot = document.getElementById("targetsRoot");
-
-    let arStartedOnce = false;
-    let currentIndex = null;
-    let currentSrc = "";
-    let isStartingVideo = false;
-
-    function setStatus(text) {
-      statusEl.textContent = text;
-    }
-
-    function getActiveGroup() {
-      return window.getGroupBySlug(activeGroupSlug);
-    }
-
-    function setActiveGroup(groupSlug) {
-      activeGroupSlug = groupSlug || "";
-      updateOverlayText();
-      updateGroupButtons();
-      updateStartButton();
-    }
-
-    function updateGroupButtons() {
-      groupButtons.forEach((button) => {
-        const isActive = button.dataset.group === activeGroupSlug;
-        button.classList.toggle("isActive", isActive);
-      });
-    }
-
-    function updateStartButton() {
-      startBtn.disabled = !getActiveGroup();
-    }
-
-    function updateOverlayText() {
-      if (selectedSlug && !selectedPlaceRaw) {
-        startDescription.textContent = "Выбранный объект не найден. Сначала выбери раздел: дома или памятники.";
-        return;
-      }
-
-      if (selectedPlaceRaw && !selectedPlace) {
-        startDescription.textContent = `Для объекта «${selectedPlaceRaw.title}» видео и метки ещё не подключены.`;
-        return;
-      }
-
-      if (selectedPlace) {
-        const group = window.getGroupBySlug(selectedPlace.group);
-        const groupTitle = group ? group.title : "раздел";
-        startDescription.textContent =
-          `Выбран объект «${selectedPlace.title}». Будет открыт раздел «${groupTitle}». Наводи камеру на метки ${selectedPlace.markerStart + 1}–${selectedPlace.markerEnd + 1}.`;
-        return;
-      }
-
-      const activeGroup = getActiveGroup();
-      if (activeGroup) {
-        startDescription.textContent =
-          `Выбран раздел «${activeGroup.title}». После запуска наводи камеру на любую метку из этого раздела.`;
-      } else {
-        startDescription.textContent =
-          "Сначала выбери раздел: дома или памятники. Потом нажми «Запустить AR».";
-      }
-    }
-
-    if (selectedPlace) {
-      groupChooser.style.display = "none";
-    }
-
-    groupButtons.forEach((button) => {
-      button.addEventListener("click", () => {
-        setActiveGroup(button.dataset.group);
-      });
-    });
-
-    function isMobileLike() {
-      return window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
-    }
-
-    function isPortrait() {
-      if (window.matchMedia) return window.matchMedia("(orientation: portrait)").matches;
-      return window.innerHeight > window.innerWidth;
-    }
-
-    function updateRotateHint() {
-      if (!arStartedOnce) {
-        rotateHint.style.display = "none";
-        return;
-      }
-      rotateHint.style.display = (isMobileLike() && isPortrait()) ? "flex" : "none";
-    }
-
-    window.addEventListener("resize", updateRotateHint);
-    window.addEventListener("orientationchange", updateRotateHint);
-
-    opacitySlider.addEventListener("input", () => {
-      const alpha = Number(opacitySlider.value) / 100;
-      videoEl.style.opacity = String(alpha);
-    });
-
-    function hardenInlineVideo() {
-      videoEl.muted = true;
-      videoEl.defaultMuted = true;
-      videoEl.loop = true;
-      videoEl.autoplay = false;
-      videoEl.playsInline = true;
-      videoEl.setAttribute("playsinline", "");
-      videoEl.setAttribute("webkit-playsinline", "");
-      videoEl.setAttribute("preload", "auto");
-      videoEl.disablePictureInPicture = true;
-      videoEl.setAttribute("disablePictureInPicture", "");
-    }
-
-    hardenInlineVideo();
-
-    videoEl.addEventListener("error", () => {
-      console.error("VIDEO ERROR:", videoEl.currentSrc, videoEl.error);
-      setStatus("Ошибка загрузки видео");
-      videoHintEl.textContent = "Видео не открылось — нажми Играть";
-    });
-
-    playPauseBtn.addEventListener("click", async () => {
-      try {
-        if (videoEl.paused) {
-          await videoEl.play();
-          playPauseBtn.textContent = "⏸ Пауза";
-          videoHintEl.textContent = "Видео играет — меняй прозрачность справа";
-        } else {
-          videoEl.pause();
-          playPauseBtn.textContent = "▶ Играть";
-          videoHintEl.textContent = "Пауза";
-        }
-      } catch (error) {
-        console.error("PLAY BUTTON ERROR:", error);
-        playPauseBtn.textContent = "▶ Играть";
-        videoHintEl.textContent = "Нажми ещё раз";
-      }
-    });
-
-    function waitForCanPlay(video) {
-      return new Promise((resolve, reject) => {
-        if (video.readyState >= 3) {
-          resolve();
-          return;
+          if (place.group === "monuments") {
+            window.location.replace(`camera-monuments.html?place=${encodeURIComponent(place.slug)}`);
+            return;
+          }
         }
 
-        const onCanPlay = () => {
-          cleanup();
-          resolve();
-        };
-
-        const onError = () => {
-          cleanup();
-          reject(new Error("video canplay error"));
-        };
-
-        const cleanup = () => {
-          video.removeEventListener("canplay", onCanPlay);
-          video.removeEventListener("error", onError);
-        };
-
-        video.addEventListener("canplay", onCanPlay, { once: true });
-        video.addEventListener("error", onError, { once: true });
-      });
-    }
-
-    function buildTargets(groupSlug) {
-      const maxMarkerIndex = window.getMaxMarkerIndexForGroup(groupSlug);
-      targetsRoot.innerHTML = "";
-
-      for (let i = 0; i <= maxMarkerIndex; i += 1) {
-        const holder = document.createElement("a-entity");
-        holder.setAttribute("mindar-image-target", `targetIndex: ${i}`);
-        holder.addEventListener("targetFound", () => onFound(i));
-        holder.addEventListener("targetLost", () => onLost(i));
-        targetsRoot.appendChild(holder);
-      }
-    }
-
-    async function startVideo(src, idx) {
-      if (isStartingVideo) return;
-      isStartingVideo = true;
-
-      try {
-        if (currentSrc !== src) {
-          videoEl.pause();
-          videoEl.removeAttribute("src");
-          videoEl.load();
-
-          currentSrc = src;
-          videoEl.src = new URL(src, window.location.href).href;
-          videoEl.currentTime = 0;
-          videoEl.muted = true;
-          videoEl.defaultMuted = true;
-          videoEl.loop = true;
-          videoEl.playsInline = true;
-
-          videoEl.load();
-          await waitForCanPlay(videoEl);
-        } else if (videoEl.paused) {
-          videoEl.currentTime = 0;
-        }
-
-        await videoEl.play();
-
-        playPauseBtn.textContent = "⏸ Пауза";
-        videoHintEl.textContent = "Видео играет — меняй прозрачность справа";
-        setStatus(`Видео запущено для метки #${idx + 1}`);
-      } catch (error) {
-        console.error("START VIDEO ERROR:", error, src);
-        playPauseBtn.textContent = "▶ Играть";
-        videoHintEl.textContent = "Автозапуск не сработал — нажми Играть";
-        setStatus("Не удалось запустить видео");
-      } finally {
-        isStartingVideo = false;
-      }
-    }
-
-    async function onFound(idx) {
-      const activeGroup = getActiveGroup();
-      if (!activeGroup) {
-        setStatus("Сначала выбери раздел.");
+        infoText.textContent = "Объект не найден. Выбери раздел вручную.";
         return;
       }
 
-      const place = window.getPlaceByMarkerIndex(activeGroup.slug, idx);
-      if (!place) {
-        setStatus(`Найдена метка #${idx + 1}, но для неё не настроено видео.`);
+      if (groupSlug === "homes") {
+        window.location.replace("camera-homes.html");
         return;
       }
 
-      if (selectedPlace && place.slug !== selectedPlace.slug) {
-        setStatus(`Сейчас выбран объект «${selectedPlace.title}». Эта метка относится к «${place.title}».`);
-        videoHintEl.textContent = `Нужны метки объекта «${selectedPlace.title}».`;
+      if (groupSlug === "monuments") {
+        window.location.replace("camera-monuments.html");
         return;
       }
-
-      currentIndex = idx;
-
-      videoDock.style.display = "block";
-      opacityControl.style.display = "block";
-      opacitySlider.value = "100";
-      videoEl.style.opacity = "1";
-
-      setStatus(`Метка #${idx + 1} найдена — ${place.title}`);
-      videoHintEl.textContent = "Пробую запустить видео...";
-
-      if (currentSrc === place.video && !videoEl.paused) {
-        videoHintEl.textContent = "Видео уже играет";
-        return;
-      }
-
-      await startVideo(place.video, idx);
-    }
-
-    function onLost(idx) {
-      if (idx === currentIndex) {
-        setStatus(`Метка #${idx + 1} потеряна — видео продолжает играть`);
-        videoHintEl.textContent = "Метка потеряна — видео продолжается";
-      }
-    }
-
-    async function checkTargetFile(filePath) {
-      sceneEl.setAttribute(
-        "mindar-image",
-        `imageTargetSrc: ${filePath}; autoStart: false; uiScanning: false; uiError: false;`
-      );
-
-      try {
-        const response = await fetch(filePath, { cache: "no-store" });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return true;
-      } catch (error) {
-        console.error("TARGET FILE ERROR:", error);
-        setStatus("Файл меток не загрузился");
-        alert(`Файл меток не загрузился: ${filePath}`);
-        return false;
-      }
-    }
-
-    async function startAR() {
-      const activeGroup = getActiveGroup();
-      if (!activeGroup) {
-        setStatus("Сначала выбери раздел.");
-        return;
-      }
-
-      const ok = await checkTargetFile(activeGroup.targetFile);
-      if (!ok) return;
-
-      buildTargets(activeGroup.slug);
-
-      const mindar = sceneEl.systems["mindar-image-system"];
-      if (!mindar) {
-        setStatus("MindAR system не найден");
-        alert("MindAR system не найден.");
-        return;
-      }
-
-      try {
-        setStatus("Запуск камеры…");
-        await mindar.start();
-
-        setStatus(selectedPlace
-          ? `Камера запущена — ищу метки объекта «${selectedPlace.title}».`
-          : `Камера запущена — раздел «${activeGroup.title}». Наведи на метку.`);
-
-        startOverlay.style.display = "none";
-        arStartedOnce = true;
-        updateRotateHint();
-      } catch (error) {
-        console.error("START AR ERROR:", error);
-        setStatus("Не удалось запустить камеру");
-        alert("Не удалось запустить камеру. Проверь разрешение браузера и что камера не занята.");
-      }
-    }
-
-    reloadBtn.addEventListener("click", () => location.reload());
-    startBtn.addEventListener("click", startAR);
-
-    updateOverlayText();
-    updateGroupButtons();
-    updateStartButton();
-    setStatus("Нажмите «Запустить AR»");
+    })();
   </script>
 </body>
 </html>
