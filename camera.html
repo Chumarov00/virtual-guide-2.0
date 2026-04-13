@@ -136,7 +136,7 @@
     }
 
     .panel {
-      width: min(720px, 92vw);
+      width: min(760px, 92vw);
       border-radius: 16px;
       padding: 18px;
       background: #17191f;
@@ -157,6 +157,31 @@
       line-height: 1.4;
     }
 
+    .groupChooser {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin: 0 0 14px;
+    }
+
+    .groupBtn {
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      color: #fff;
+      min-height: 54px;
+      padding: 12px;
+      border-radius: 14px;
+      font-weight: 900;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .groupBtn.isActive {
+      background: linear-gradient(135deg, rgba(108,99,255,.95), rgba(67,185,255,.95));
+      color: #07121d;
+      border-color: transparent;
+    }
+
     .actions {
       display: flex;
       gap: 12px;
@@ -171,6 +196,11 @@
       font-weight: 800;
       cursor: pointer;
       font-family: inherit;
+    }
+
+    button:disabled {
+      opacity: .55;
+      cursor: not-allowed;
     }
 
     .ghost {
@@ -290,6 +320,12 @@
       opacity: .75;
     }
 
+    @media (max-width: 560px) {
+      .groupChooser {
+        grid-template-columns: 1fr;
+      }
+    }
+
     @media (max-width: 420px) {
       #videoControls {
         right: 12px;
@@ -321,14 +357,20 @@
   <div id="startOverlay">
     <div class="panel">
       <h3>Призраки прошлого</h3>
-      <p>
-        Нажмите кнопку, разрешите доступ к камере и наведите телефон на метку.
-        <br><span style="opacity:.75">Потом уменьшайте прозрачность видео справа.</span>
+      <p id="startDescription">
+        Нажми кнопку, разреши доступ к камере и наведи телефон на метку.
       </p>
+
+      <div class="groupChooser" id="groupChooser">
+        <button class="groupBtn" type="button" data-group="homes">Дома</button>
+        <button class="groupBtn" type="button" data-group="monuments">Памятники</button>
+      </div>
+
       <div class="actions">
         <button class="ghost" id="reloadBtn" type="button">Обновить</button>
         <button class="primary" id="startBtn" type="button">Запустить AR</button>
       </div>
+
       <p style="margin-top:10px; font-size:12px; opacity:.65">
         Если экран чёрный — камера может быть занята другой вкладкой или приложением.
       </p>
@@ -356,7 +398,7 @@
   <div id="ar">
     <a-scene
       id="scene"
-      mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiScanning: false; uiError: false;"
+      mindar-image="imageTargetSrc: ./home.mind; autoStart: false; uiScanning: false; uiError: false;"
       renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true; alpha: true"
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled: true"
@@ -371,33 +413,32 @@
     </a-scene>
   </div>
 
+  <script src="places.js"></script>
   <script>
-    const TARGETS_PATH = "./targets.mind";
+    const url = new URL(window.location.href);
+    const selectedSlug = url.searchParams.get("place") || "";
+    const requestedGroupSlug = url.searchParams.get("group") || "";
 
-    const VIDEO_URLS = {
-      bulygin: new URL("./assets/videos/bulygin.mp4", window.location.href).href,
-      naumov: new URL("./assets/videos/naumov.mp4", window.location.href).href,
-      pchelin: new URL("./assets/videos/pchelin.mp4", window.location.href).href
-    };
+    const selectedPlaceRaw = selectedSlug ? window.getPlaceBySlug(selectedSlug) : null;
+    const selectedPlace = selectedPlaceRaw && selectedPlaceRaw.enabled ? selectedPlaceRaw : null;
 
-    function groupByIndex(i) {
-      if (i >= 0 && i <= 7) return "bulygin";
-      if (i >= 8 && i <= 14) return "naumov";
-      if (i >= 15 && i <= 24) return "pchelin";
-      return null;
-    }
+    let activeGroupSlug = selectedPlace
+      ? selectedPlace.group
+      : (window.getGroupBySlug(requestedGroupSlug) ? requestedGroupSlug : "");
 
     const statusEl = document.getElementById("status");
     const startOverlay = document.getElementById("startOverlay");
+    const startDescription = document.getElementById("startDescription");
     const startBtn = document.getElementById("startBtn");
     const reloadBtn = document.getElementById("reloadBtn");
     const rotateHint = document.getElementById("rotateHint");
+    const groupChooser = document.getElementById("groupChooser");
+    const groupButtons = Array.from(document.querySelectorAll(".groupBtn"));
 
     const videoDock = document.getElementById("videoDock");
     const videoEl = document.getElementById("arVideo");
     const videoHintEl = document.getElementById("videoHint");
     const playPauseBtn = document.getElementById("playPauseBtn");
-
     const opacityControl = document.getElementById("opacityControl");
     const opacitySlider = document.getElementById("opacitySlider");
 
@@ -412,6 +453,67 @@
     function setStatus(text) {
       statusEl.textContent = text;
     }
+
+    function getActiveGroup() {
+      return window.getGroupBySlug(activeGroupSlug);
+    }
+
+    function setActiveGroup(groupSlug) {
+      activeGroupSlug = groupSlug || "";
+      updateOverlayText();
+      updateGroupButtons();
+      updateStartButton();
+    }
+
+    function updateGroupButtons() {
+      groupButtons.forEach((button) => {
+        const isActive = button.dataset.group === activeGroupSlug;
+        button.classList.toggle("isActive", isActive);
+      });
+    }
+
+    function updateStartButton() {
+      startBtn.disabled = !getActiveGroup();
+    }
+
+    function updateOverlayText() {
+      if (selectedSlug && !selectedPlaceRaw) {
+        startDescription.textContent = "Выбранный объект не найден. Сначала выбери раздел: дома или памятники.";
+        return;
+      }
+
+      if (selectedPlaceRaw && !selectedPlace) {
+        startDescription.textContent = `Для объекта «${selectedPlaceRaw.title}» видео и метки ещё не подключены.`;
+        return;
+      }
+
+      if (selectedPlace) {
+        const group = window.getGroupBySlug(selectedPlace.group);
+        const groupTitle = group ? group.title : "раздел";
+        startDescription.textContent =
+          `Выбран объект «${selectedPlace.title}». Будет открыт раздел «${groupTitle}». Наводи камеру на метки ${selectedPlace.markerStart + 1}–${selectedPlace.markerEnd + 1}.`;
+        return;
+      }
+
+      const activeGroup = getActiveGroup();
+      if (activeGroup) {
+        startDescription.textContent =
+          `Выбран раздел «${activeGroup.title}». После запуска наводи камеру на любую метку из этого раздела.`;
+      } else {
+        startDescription.textContent =
+          "Сначала выбери раздел: дома или памятники. Потом нажми «Запустить AR».";
+      }
+    }
+
+    if (selectedPlace) {
+      groupChooser.style.display = "none";
+    }
+
+    groupButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        setActiveGroup(button.dataset.group);
+      });
+    });
 
     function isMobileLike() {
       return window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
@@ -453,18 +555,10 @@
 
     hardenInlineVideo();
 
-    videoEl.addEventListener("loadeddata", () => {
-      console.log("VIDEO LOADED:", videoEl.currentSrc);
-    });
-
-    videoEl.addEventListener("canplay", () => {
-      console.log("VIDEO CANPLAY:", videoEl.currentSrc);
-    });
-
     videoEl.addEventListener("error", () => {
       console.error("VIDEO ERROR:", videoEl.currentSrc, videoEl.error);
       setStatus("Ошибка загрузки видео");
-      videoHintEl.textContent = "Видео не открылось — нажми Пауза/Играть";
+      videoHintEl.textContent = "Видео не открылось — нажми Играть";
     });
 
     playPauseBtn.addEventListener("click", async () => {
@@ -512,10 +606,11 @@
       });
     }
 
-    function buildTargets() {
+    function buildTargets(groupSlug) {
+      const maxMarkerIndex = window.getMaxMarkerIndexForGroup(groupSlug);
       targetsRoot.innerHTML = "";
 
-      for (let i = 0; i <= 24; i++) {
+      for (let i = 0; i <= maxMarkerIndex; i += 1) {
         const holder = document.createElement("a-entity");
         holder.setAttribute("mindar-image-target", `targetIndex: ${i}`);
         holder.addEventListener("targetFound", () => onFound(i));
@@ -535,7 +630,7 @@
           videoEl.load();
 
           currentSrc = src;
-          videoEl.src = src;
+          videoEl.src = new URL(src, window.location.href).href;
           videoEl.currentTime = 0;
           videoEl.muted = true;
           videoEl.defaultMuted = true;
@@ -564,13 +659,24 @@
     }
 
     async function onFound(idx) {
-      const group = groupByIndex(idx);
-      if (!group) {
-        setStatus(`Найдена метка #${idx + 1}, но для неё нет видео`);
+      const activeGroup = getActiveGroup();
+      if (!activeGroup) {
+        setStatus("Сначала выбери раздел.");
         return;
       }
 
-      const src = VIDEO_URLS[group];
+      const place = window.getPlaceByMarkerIndex(activeGroup.slug, idx);
+      if (!place) {
+        setStatus(`Найдена метка #${idx + 1}, но для неё не настроено видео.`);
+        return;
+      }
+
+      if (selectedPlace && place.slug !== selectedPlace.slug) {
+        setStatus(`Сейчас выбран объект «${selectedPlace.title}». Эта метка относится к «${place.title}».`);
+        videoHintEl.textContent = `Нужны метки объекта «${selectedPlace.title}».`;
+        return;
+      }
+
       currentIndex = idx;
 
       videoDock.style.display = "block";
@@ -578,15 +684,15 @@
       opacitySlider.value = "100";
       videoEl.style.opacity = "1";
 
-      setStatus(`Метка #${idx + 1} найдена`);
+      setStatus(`Метка #${idx + 1} найдена — ${place.title}`);
       videoHintEl.textContent = "Пробую запустить видео...";
 
-      if (currentSrc === src && !videoEl.paused) {
+      if (currentSrc === place.video && !videoEl.paused) {
         videoHintEl.textContent = "Видео уже играет";
         return;
       }
 
-      await startVideo(src, idx);
+      await startVideo(place.video, idx);
     }
 
     function onLost(idx) {
@@ -596,29 +702,35 @@
       }
     }
 
-    async function checkTargetsFile() {
+    async function checkTargetFile(filePath) {
       sceneEl.setAttribute(
         "mindar-image",
-        `imageTargetSrc: ${TARGETS_PATH}; autoStart: false; uiScanning: false; uiError: false;`
+        `imageTargetSrc: ${filePath}; autoStart: false; uiScanning: false; uiError: false;`
       );
 
       try {
-        const response = await fetch(TARGETS_PATH, { cache: "no-store" });
+        const response = await fetch(filePath, { cache: "no-store" });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return true;
       } catch (error) {
-        console.error("TARGETS ERROR:", error);
-        setStatus("targets.mind не загрузился");
-        alert("Файл targets.mind не загрузился. Проверь, что он лежит рядом с camera.html.");
+        console.error("TARGET FILE ERROR:", error);
+        setStatus("Файл меток не загрузился");
+        alert(`Файл меток не загрузился: ${filePath}`);
         return false;
       }
     }
 
     async function startAR() {
-      const ok = await checkTargetsFile();
+      const activeGroup = getActiveGroup();
+      if (!activeGroup) {
+        setStatus("Сначала выбери раздел.");
+        return;
+      }
+
+      const ok = await checkTargetFile(activeGroup.targetFile);
       if (!ok) return;
 
-      buildTargets();
+      buildTargets(activeGroup.slug);
 
       const mindar = sceneEl.systems["mindar-image-system"];
       if (!mindar) {
@@ -631,9 +743,11 @@
         setStatus("Запуск камеры…");
         await mindar.start();
 
-        setStatus("Камера запущена — наведи на метку");
-        startOverlay.style.display = "none";
+        setStatus(selectedPlace
+          ? `Камера запущена — ищу метки объекта «${selectedPlace.title}».`
+          : `Камера запущена — раздел «${activeGroup.title}». Наведи на метку.`);
 
+        startOverlay.style.display = "none";
         arStartedOnce = true;
         updateRotateHint();
       } catch (error) {
@@ -646,6 +760,9 @@
     reloadBtn.addEventListener("click", () => location.reload());
     startBtn.addEventListener("click", startAR);
 
+    updateOverlayText();
+    updateGroupButtons();
+    updateStartButton();
     setStatus("Нажмите «Запустить AR»");
   </script>
 </body>
