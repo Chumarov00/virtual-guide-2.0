@@ -1,16 +1,3 @@
-window.TARGET_GROUPS = {
-  homes: {
-    slug: "homes",
-    title: "Дома",
-    targetFile: "./home.mind"
-  },
-  monuments: {
-    slug: "monuments",
-    title: "Памятники",
-    targetFile: "./monuments.mind"
-  }
-};
-
 window.PLACES = [
   {
     slug: "bulygin",
@@ -62,7 +49,7 @@ window.PLACES = [
   },
   {
     slug: "catherine",
-    title: "Памятник Елизавете Петровне",
+    title: "Елизавете Петровне",
     tag: "Памятник",
     image: "assets/images/Catherine.jpg",
     video: "assets/videos/catherine.mp4",
@@ -100,11 +87,6 @@ window.PLACES = [
 
 window.getPlaceBySlug = function getPlaceBySlug(slug) {
   return window.PLACES.find((place) => place.slug === slug) || null;
-};
-
-window.getGroupBySlug = function getGroupBySlug(slug) {
-  if (!slug) return null;
-  return window.TARGET_GROUPS[slug] || null;
 };
 
 window.getPlacesByGroup = function getPlacesByGroup(groupSlug) {
