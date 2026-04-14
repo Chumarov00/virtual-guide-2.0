@@ -77,10 +77,61 @@
       text-overflow: ellipsis;
     }
 
+    #rotateHint {
+      position: fixed;
+      inset: 0;
+      z-index: 10020;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,.55);
+      pointer-events: none;
+    }
+
+    .rotateCard {
+      width: min(520px, 92vw);
+      border-radius: 18px;
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(16,18,24,.78);
+      backdrop-filter: blur(12px);
+      color: #fff;
+      text-align: center;
+      box-shadow: 0 18px 40px rgba(0,0,0,.35);
+    }
+
+    .rotateIcon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 10px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.14);
+      background:
+        radial-gradient(120px 60px at 30% 30%, rgba(74,168,255,.35), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+    }
+
+    .rotateTitle {
+      font-weight: 950;
+      font-size: 16px;
+      margin: 0 0 6px;
+    }
+
+    .rotateText {
+      opacity: .88;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
     .hintToast {
       position: fixed;
       left: 50%;
-      transform: translateX(-50%);
+      bottom: 88px;
+      transform: translateX(-50%) translateY(8px);
       z-index: 10025;
       max-width: min(88vw, 520px);
       padding: 11px 14px;
@@ -99,24 +150,6 @@
 
     .hintToast.isVisible {
       opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    #rotateHintToast {
-      top: 68px;
-      transform: translateX(-50%) translateY(-8px);
-    }
-
-    #rotateHintToast.isVisible {
-      transform: translateX(-50%) translateY(0);
-    }
-
-    #gestureHintToast {
-      bottom: 88px;
-      transform: translateX(-50%) translateY(8px);
-    }
-
-    #gestureHintToast.isVisible {
       transform: translateX(-50%) translateY(0);
     }
 
@@ -264,7 +297,14 @@
     <div class="status" id="status">Нажмите «Запустить AR»</div>
   </div>
 
-  <div class="hintToast" id="rotateHintToast">Для лучшего эффекта просто поверни телефон горизонтально. Это только подсказка.</div>
+  <div id="rotateHint" aria-hidden="true">
+    <div class="rotateCard">
+      <div class="rotateIcon">📱↻</div>
+      <div class="rotateTitle">Поверни телефон горизонтально</div>
+      <div class="rotateText">Так видео поверх здания будет отображаться правильно и смотреться лучше.</div>
+    </div>
+  </div>
+
   <div class="hintToast" id="gestureHintToast">Прозрачность: вверх — прозрачнее, вниз — плотнее.</div>
 
   <div id="startOverlay">
@@ -330,7 +370,7 @@
       const startBtn = document.getElementById("startBtn");
       const reloadBtn = document.getElementById("reloadBtn");
 
-      const rotateHintToast = document.getElementById("rotateHintToast");
+      const rotateHint = document.getElementById("rotateHint");
       const gestureHintToast = document.getElementById("gestureHintToast");
 
       const videoDock = document.getElementById("videoDock");
@@ -349,7 +389,6 @@
       let gestureStartY = null;
       let gestureStartOpacity = 1;
 
-      let rotateHintTimer = null;
       let gestureHintTimer = null;
 
       if (selectedSlug && !selectedPlace) {
@@ -371,14 +410,6 @@
         videoEl.style.opacity = String(currentOpacity);
       }
 
-      function showRotateHint() {
-        clearTimeout(rotateHintTimer);
-        rotateHintToast.classList.add("isVisible");
-        rotateHintTimer = setTimeout(() => {
-          rotateHintToast.classList.remove("isVisible");
-        }, 3200);
-      }
-
       function showGestureHint() {
         clearTimeout(gestureHintTimer);
         gestureHintToast.classList.add("isVisible");
@@ -396,17 +427,23 @@
         return window.innerHeight > window.innerWidth;
       }
 
-      function updateRotateHintSoft() {
-        if (!arStartedOnce) return;
-        if (!isMobileLike()) return;
-        if (isPortrait()) {
-          showRotateHint();
+      function updateRotateHint() {
+        if (!arStartedOnce) {
+          rotateHint.style.display = "none";
+          return;
         }
+
+        if (!isMobileLike()) {
+          rotateHint.style.display = "none";
+          return;
+        }
+
+        rotateHint.style.display = isPortrait() ? "flex" : "none";
       }
 
-      window.addEventListener("resize", updateRotateHintSoft);
+      window.addEventListener("resize", updateRotateHint);
       window.addEventListener("orientationchange", () => {
-        setTimeout(updateRotateHintSoft, 150);
+        setTimeout(updateRotateHint, 150);
       });
 
       function hardenInlineVideo() {
@@ -585,10 +622,7 @@
 
           startOverlay.style.display = "none";
           arStartedOnce = true;
-
-          setTimeout(() => {
-            updateRotateHintSoft();
-          }, 500);
+          updateRotateHint();
         } catch (error) {
           console.error("START AR ERROR:", error);
           setStatus("Не удалось запустить камеру");
@@ -598,6 +632,7 @@
 
       function handleGestureStart(touchY) {
         if (videoDock.style.display !== "block") return;
+        if (touchY == null) return;
         gestureStartY = touchY;
         gestureStartOpacity = currentOpacity;
       }
