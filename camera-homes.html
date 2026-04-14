@@ -17,6 +17,7 @@
       overflow: hidden;
       background: #000;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      touch-action: none;
     }
 
     #ar {
@@ -76,53 +77,47 @@
       text-overflow: ellipsis;
     }
 
-    #rotateHint {
+    .hintToast {
       position: fixed;
-      inset: 0;
-      z-index: 10020;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0,0,0,.55);
-      pointer-events: none;
-    }
-
-    .rotateCard {
-      width: min(520px, 92vw);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10025;
+      max-width: min(88vw, 520px);
+      padding: 11px 14px;
       border-radius: 18px;
-      padding: 16px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(16,18,24,.75);
-      backdrop-filter: blur(12px);
-      color: #fff;
-      text-align: center;
-    }
-
-    .rotateIcon {
-      width: 64px;
-      height: 64px;
-      margin: 0 auto 10px;
-      border-radius: 16px;
       border: 1px solid rgba(255,255,255,.14);
-      background:
-        radial-gradient(120px 60px at 30% 30%, rgba(74,168,255,.35), transparent 60%),
-        linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 30px;
-    }
-
-    .rotateTitle {
-      font-weight: 950;
-      font-size: 15px;
-      margin: 0 0 6px;
-    }
-
-    .rotateText {
-      opacity: .85;
+      background: rgba(0,0,0,.46);
+      backdrop-filter: blur(12px);
+      color: rgba(255,255,255,.94);
       font-size: 13px;
       line-height: 1.35;
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s ease, transform .25s ease;
+    }
+
+    .hintToast.isVisible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    #rotateHintToast {
+      top: 68px;
+      transform: translateX(-50%) translateY(-8px);
+    }
+
+    #rotateHintToast.isVisible {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    #gestureHintToast {
+      bottom: 88px;
+      transform: translateX(-50%) translateY(8px);
+    }
+
+    #gestureHintToast.isVisible {
+      transform: translateX(-50%) translateY(0);
     }
 
     #startOverlay {
@@ -216,6 +211,7 @@
       gap: 10px;
       align-items: center;
       pointer-events: auto;
+      flex-wrap: wrap;
     }
 
     .vbtn {
@@ -243,57 +239,15 @@
       color: rgba(180,220,255,.95);
       font-weight: 850;
       font-size: 12px;
-      max-width: min(62vw, 520px);
+      max-width: min(72vw, 560px);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    #opacityControl {
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 10045;
-      display: none;
-      padding: 12px 10px;
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.45);
-      backdrop-filter: blur(10px);
-      color: rgba(255,255,255,.92);
-      user-select: none;
-      pointer-events: auto;
-    }
-
-    #opacityLabel {
-      font-size: 12px;
-      font-weight: 900;
-      text-align: center;
-      margin-bottom: 10px;
-      opacity: .9;
-    }
-
-    #opacitySlider {
-      width: 240px;
-      height: 28px;
-      transform: rotate(-90deg);
-      transform-origin: center;
-      cursor: pointer;
-    }
-
-    #opacityMinMax {
-      margin-top: 10px;
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      opacity: .75;
-    }
-
     @media (max-width: 420px) {
       #videoControls {
         right: 12px;
-        flex-wrap: wrap;
       }
 
       .vhint {
@@ -310,13 +264,8 @@
     <div class="status" id="status">Нажмите «Запустить AR»</div>
   </div>
 
-  <div id="rotateHint" aria-hidden="true">
-    <div class="rotateCard">
-      <div class="rotateIcon">📱↻</div>
-      <div class="rotateTitle">Поверни телефон горизонтально</div>
-      <div class="rotateText">Так метка распознаётся стабильнее, а видео поверх здания выглядит лучше.</div>
-    </div>
-  </div>
+  <div class="hintToast" id="rotateHintToast">Для лучшего эффекта просто поверни телефон горизонтально. Это только подсказка.</div>
+  <div class="hintToast" id="gestureHintToast">Прозрачность: вверх — прозрачнее, вниз — плотнее.</div>
 
   <div id="startOverlay">
     <div class="panel">
@@ -342,15 +291,6 @@
     <div id="videoControls">
       <button class="vbtn" id="playPauseBtn" type="button">⏸ Пауза</button>
       <div class="vhint" id="videoHint">Сканирование…</div>
-    </div>
-
-    <div id="opacityControl" aria-label="Регулировка прозрачности видео">
-      <div id="opacityLabel">Прозрачность</div>
-      <input id="opacitySlider" type="range" min="20" max="100" value="100" step="1">
-      <div id="opacityMinMax">
-        <span>20%</span>
-        <span>100%</span>
-      </div>
     </div>
   </div>
 
@@ -389,14 +329,14 @@
       const startDescription = document.getElementById("startDescription");
       const startBtn = document.getElementById("startBtn");
       const reloadBtn = document.getElementById("reloadBtn");
-      const rotateHint = document.getElementById("rotateHint");
+
+      const rotateHintToast = document.getElementById("rotateHintToast");
+      const gestureHintToast = document.getElementById("gestureHintToast");
 
       const videoDock = document.getElementById("videoDock");
       const videoEl = document.getElementById("arVideo");
       const videoHintEl = document.getElementById("videoHint");
       const playPauseBtn = document.getElementById("playPauseBtn");
-      const opacityControl = document.getElementById("opacityControl");
-      const opacitySlider = document.getElementById("opacitySlider");
 
       const targetsRoot = document.getElementById("targetsRoot");
 
@@ -404,6 +344,13 @@
       let currentIndex = null;
       let currentSrc = "";
       let isStartingVideo = false;
+
+      let currentOpacity = 1;
+      let gestureStartY = null;
+      let gestureStartOpacity = 1;
+
+      let rotateHintTimer = null;
+      let gestureHintTimer = null;
 
       if (selectedSlug && !selectedPlace) {
         startDescription.textContent = "Выбранный объект не относится к разделу «Дома». Будут доступны все метки домов.";
@@ -415,6 +362,31 @@
         statusEl.textContent = text;
       }
 
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+      }
+
+      function applyOpacity(value) {
+        currentOpacity = clamp(value, 0.2, 1);
+        videoEl.style.opacity = String(currentOpacity);
+      }
+
+      function showRotateHint() {
+        clearTimeout(rotateHintTimer);
+        rotateHintToast.classList.add("isVisible");
+        rotateHintTimer = setTimeout(() => {
+          rotateHintToast.classList.remove("isVisible");
+        }, 3200);
+      }
+
+      function showGestureHint() {
+        clearTimeout(gestureHintTimer);
+        gestureHintToast.classList.add("isVisible");
+        gestureHintTimer = setTimeout(() => {
+          gestureHintToast.classList.remove("isVisible");
+        }, 3400);
+      }
+
       function isMobileLike() {
         return window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
       }
@@ -424,20 +396,17 @@
         return window.innerHeight > window.innerWidth;
       }
 
-      function updateRotateHint() {
-        if (!arStartedOnce) {
-          rotateHint.style.display = "none";
-          return;
+      function updateRotateHintSoft() {
+        if (!arStartedOnce) return;
+        if (!isMobileLike()) return;
+        if (isPortrait()) {
+          showRotateHint();
         }
-        rotateHint.style.display = (isMobileLike() && isPortrait()) ? "flex" : "none";
       }
 
-      window.addEventListener("resize", updateRotateHint);
-      window.addEventListener("orientationchange", updateRotateHint);
-
-      opacitySlider.addEventListener("input", () => {
-        const alpha = Number(opacitySlider.value) / 100;
-        videoEl.style.opacity = String(alpha);
+      window.addEventListener("resize", updateRotateHintSoft);
+      window.addEventListener("orientationchange", () => {
+        setTimeout(updateRotateHintSoft, 150);
       });
 
       function hardenInlineVideo() {
@@ -454,6 +423,7 @@
       }
 
       hardenInlineVideo();
+      applyOpacity(1);
 
       videoEl.addEventListener("error", () => {
         console.error("VIDEO ERROR:", videoEl.currentSrc, videoEl.error);
@@ -466,7 +436,7 @@
           if (videoEl.paused) {
             await videoEl.play();
             playPauseBtn.textContent = "⏸ Пауза";
-            videoHintEl.textContent = "Видео играет — меняй прозрачность справа";
+            videoHintEl.textContent = "Видео играет — свайп вверх/вниз меняет прозрачность";
           } else {
             videoEl.pause();
             playPauseBtn.textContent = "▶ Играть";
@@ -546,8 +516,9 @@
           await videoEl.play();
 
           playPauseBtn.textContent = "⏸ Пауза";
-          videoHintEl.textContent = "Видео играет — меняй прозрачность справа";
+          videoHintEl.textContent = "Видео играет — свайп вверх/вниз меняет прозрачность";
           setStatus(`Видео запущено для метки #${idx + 1}`);
+          showGestureHint();
         } catch (error) {
           console.error("START VIDEO ERROR:", error, src);
           playPauseBtn.textContent = "▶ Играть";
@@ -573,15 +544,14 @@
 
         currentIndex = idx;
         videoDock.style.display = "block";
-        opacityControl.style.display = "block";
-        opacitySlider.value = "100";
-        videoEl.style.opacity = "1";
+        applyOpacity(1);
 
         setStatus(`Метка #${idx + 1} найдена — ${place.title}`);
         videoHintEl.textContent = "Пробую запустить видео...";
 
         if (currentSrc === place.video && !videoEl.paused) {
-          videoHintEl.textContent = "Видео уже играет";
+          videoHintEl.textContent = "Видео уже играет — свайп вверх/вниз меняет прозрачность";
+          showGestureHint();
           return;
         }
 
@@ -615,13 +585,51 @@
 
           startOverlay.style.display = "none";
           arStartedOnce = true;
-          updateRotateHint();
+
+          setTimeout(() => {
+            updateRotateHintSoft();
+          }, 500);
         } catch (error) {
           console.error("START AR ERROR:", error);
           setStatus("Не удалось запустить камеру");
           alert("Не удалось запустить камеру. Проверь разрешение браузера и что камера не занята.");
         }
       }
+
+      function handleGestureStart(touchY) {
+        if (videoDock.style.display !== "block") return;
+        gestureStartY = touchY;
+        gestureStartOpacity = currentOpacity;
+      }
+
+      function handleGestureMove(touchY) {
+        if (gestureStartY === null) return;
+
+        const deltaY = touchY - gestureStartY;
+        const nextOpacity = gestureStartOpacity + (deltaY / 320);
+        applyOpacity(nextOpacity);
+      }
+
+      function handleGestureEnd() {
+        gestureStartY = null;
+        gestureStartOpacity = currentOpacity;
+      }
+
+      document.addEventListener("touchstart", (event) => {
+        if (!event.touches || event.touches.length !== 1) return;
+        if (event.target.closest("#videoControls")) return;
+        handleGestureStart(event.touches[0].clientY);
+      }, { passive: true });
+
+      document.addEventListener("touchmove", (event) => {
+        if (gestureStartY === null) return;
+        if (!event.touches || event.touches.length !== 1) return;
+        handleGestureMove(event.touches[0].clientY);
+        event.preventDefault();
+      }, { passive: false });
+
+      document.addEventListener("touchend", handleGestureEnd, { passive: true });
+      document.addEventListener("touchcancel", handleGestureEnd, { passive: true });
 
       reloadBtn.addEventListener("click", () => location.reload());
       startBtn.addEventListener("click", startAR);
